@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import pandas as pd
+import numpy as np
 import calendar
 from datetime import datetime
 from decouple import config
@@ -38,8 +39,8 @@ def consultar_dados(query):
         st.error(f"Erro na consulta SQL: {e}")
         return None
 
-# Interface do Streamlit
-st.title("Dashboard com SQLAlchemy")
+# # Interface do Streamlit
+# st.title("Dashboard com SQLAlchemy")
 
 sql_file_path = os.path.join(os.path.dirname(__file__), "query.sql")
 
@@ -69,33 +70,74 @@ if dados is not None and len(dados) > 0:
         ).reset_index()
         
         # Exibindo o DataFrame no Streamlit
+        st.markdown(
+            """
+            <style>
+            [data-testid="stMainBlockContainer"] {
+                padding: 6rem 2rem 1rem;
+            }
+            [data-testid="stHeader"] {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 80px;
+                background-color: #123a57; 
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Divisão superior
+        col1, col2 = st.columns([3, 2])
+
+        # Gráfico Esquerda (60%)
+        with col1:
+
+            # Criando dados e exibindo um gráfico nativo do Streamlit
+            min_data = df["Real_Fim"].min()
+            max_data = df["Real_Fim"].max()
+
+            # Gerando um intervalo de datas baseado no mínimo e máximo
+            dates = pd.date_range(start=min_data, end=max_data, freq="D")
+
+            # Transformando as datas em strings para exibição no gráfico
+            df["Real_Fim"] = df["Real_Fim"].dt.strftime('%Y-%m-%d')
+            contagem_distinta = df['Id'].value_counts()
+
+            # Criando o gráfico de barras nativo
+            st.bar_chart(data=df.set_index(df["Real_Fim"])[df["Id"]])
+
+        # Gráfico Direita (40%)
+        with col2:
+            # Criando outro gráfico nativo do Streamlit
+            data = pd.DataFrame(
+                np.random.randn(20, 3),
+                columns=['X', 'Y', 'Z']
+            )
+            st.bar_chart(data)
+
+        # Parte inferior (100%)
+
+        # Gráfico inferior
         st.dataframe(pivoted_df)
     except Exception as e:
         st.error(f"Erro ao pivotar os dados: {e}")
 else:
     st.warning("Nenhum dado encontrado para exibir.")
 
-with st.sidebar:
-    st.header("Filtros")
+# with st.sidebar:
+#     st.header("Filtros")
     
-    # Filtro de Ano
-    ano_atual = datetime.now().year
-    anos = list(range(ano_atual - 5, ano_atual + 1))  # últimos 5 anos até o atual
-    ano_selecionado = st.selectbox("Selecione o Ano", anos)
+#     # Filtro de Ano
+#     ano_atual = datetime.now().year
+#     anos = list(range(ano_atual - 5, ano_atual + 1))  # últimos 5 anos até o atual
+#     ano_selecionado = st.selectbox("Selecione o Ano", anos)
     
-    # Filtro de Mês
-    meses = list(range(1, 13))
-    mes_nomes = [calendar.month_name[mes] for mes in meses]  # nomes dos meses
-    mes_selecionado = st.selectbox("Selecione o Mês", meses, format_func=lambda x: calendar.month_name[x])
+#     # Filtro de Mês
+#     meses = list(range(1, 13))
+#     mes_nomes = [calendar.month_name[mes] for mes in meses]  # nomes dos meses
+#     mes_selecionado = st.selectbox("Selecione o Mês", meses, format_func=lambda x: calendar.month_name[x])
+# Estilo CSS para o layout
 
-
-st.write("### Dados Filtrados")
-st.write(f"Mostrando dados para: {calendar.month_name[mes_selecionado]} de {ano_selecionado}")
-
-# Exemplo de como usar os valores filtrados
-dados_filtrados = {
-    "Ano": ano_selecionado,
-    "Mês": mes_selecionado,
-    "Mês Nome": calendar.month_name[mes_selecionado]
-}
-st.write(dados_filtrados)
