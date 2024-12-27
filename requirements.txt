@@ -1,0 +1,11 @@
+streamlit==1.40.2
+pandas==2.2.2
+numpy==1.26.4
+Pillow
+scikit-learn
+statsmodels
+plotly
+pydeck
+requests
+reportlab
+streamlit-extras==0.5.0
